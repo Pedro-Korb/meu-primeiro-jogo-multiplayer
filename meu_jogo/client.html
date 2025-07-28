@@ -17,8 +17,109 @@
         const canva = document.getElementById('screen');
         const context = canva.getContext('2d');
 
-        context.fillStyle = 'red';
-        context.fillRect(0, 0, 500, 500); 
+        const game = createGame();
+        const keyboardListener = createKeyboardListener();
+        keyboardListener.subscribe(game.movePlayer);
+
+        function createKeyboardListener() {
+            const state = {
+                observers : []
+            }
+
+            function subscribe(observerFunction) {
+                state.observers.push(observerFunction);
+            }
+
+            function notifyAll(command) {
+                console.log(`Notiying ${state.observers.length} observers`);
+
+                for(const observerFunction of state.observers) {
+                    observerFunction(command);
+                }
+            }
+
+            document.addEventListener('keydown', handleKeyDown);
+
+            function handleKeyDown(event) {
+                const keyPressed = event.key;
+
+                const command = {
+                    playerId : 'player1',
+                    keyPressed
+                }
+
+                notifyAll(command);
+            }
+
+            return {
+                subscribe
+            }
+        }
+
+        function createGame() {
+
+             const state = {
+                players : {
+                    'player1' : {x : 50, y : 50},
+                    'player2' : {x : 300, y : 100}
+                },
+                fruits : {
+                    'fruit1' : {x : 150, y : 150}
+                }
+            }
+
+            function movePlayer(command) {
+                console.log(`Moving ${command.playerId} with ${command.keyPressed}`);
+                const player = state.players[command.playerId];
+                const keyPressed = command.keyPressed;
+
+                if(keyPressed == 'ArrowUp' && player.y > 0) {
+                    player.y -= 10;
+                    return;
+                }
+
+                if(keyPressed == 'ArrowDown' && player.y < canva.height - 50) {
+                    player.y += 10;
+                    return;
+                }
+
+                if(keyPressed == 'ArrowLeft' && player.x > 0) {
+                    player.x -= 10;
+                    return;
+                }
+
+                if(keyPressed == 'ArrowRight' && player.x < canva.width - 50) {
+                    player.x += 10;
+                    return;
+                }
+            }
+
+            return {
+                movePlayer,
+                state
+            }
+        }
+
+        function renderScreen() {
+            context.clearRect(0, 0, canva.width, canva.height);
+
+            for(const playerId in game.state.players) {
+                const player = game.state.players[playerId];
+                context.fillStyle = 'green';
+                context.fillRect(player.x, player.y, 50, 50);
+            }
+
+            for (const fruitId in game.state.fruits) {
+                const fruit = game.state.fruits[fruitId];
+                context.fillStyle = 'yellow';
+                context.fillRect(fruit.x, fruit.y, 50, 50);
+            }
+
+            requestAnimationFrame(renderScreen);
+        }
+
+        renderScreen();
+
     </script>
 </body>
 </html>
