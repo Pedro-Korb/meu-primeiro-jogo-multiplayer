@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teste</title>
     <style>
+
+        body {
+            background-color: rgb(173, 173, 173);
+        }
+
         #screen {
             border : 3px solid black;
         }
@@ -31,8 +36,6 @@
             }
 
             function notifyAll(command) {
-                console.log(`Notiying ${state.observers.length} observers`);
-
                 for(const observerFunction of state.observers) {
                     observerFunction(command);
                 }
@@ -59,43 +62,80 @@
         function createGame() {
 
              const state = {
-                players : {
-                    'player1' : {x : 50, y : 50},
-                    'player2' : {x : 300, y : 100}
-                },
-                fruits : {
-                    'fruit1' : {x : 150, y : 150}
+                players : {},
+                fruits : {}
+            }
+
+            function addPlayer(command) {
+                const playerId = command.playerId;
+                const playerX = command.playerX;
+                const playerY = command.playerY;
+
+                state.players[playerId] = {
+                    x : playerX,
+                    y : playerY
                 }
             }
 
+            function removePlayer(command) {
+                const playerId = command.playerId;
+                delete state.players[playerId];
+            }
+
+            function addFruit(command) {
+                const fruitId = command.fruitId;
+                const fruitX = command.fruitX;
+                const fruitY = command.fruitY;
+
+                state.fruits[fruitId] = {
+                    x : fruitX,
+                    y : fruitY
+                }
+            }
+
+            function removeFruit(command) {
+                const fruitId = command.fruitId;
+                delete state.fruits[fruitId];
+            }
+
             function movePlayer(command) {
-                console.log(`Moving ${command.playerId} with ${command.keyPressed}`);
+                const acceptedMoves = {
+                    ArrowUp(player) {
+                        if(player.y > 0) {
+                            player.y -= 50
+                        }
+                    },
+                    ArrowRight(player) {
+                        if(player.x < canva.width - 50) {
+                            player.x += 50;
+                        }
+                    },
+                    ArrowDown(player) {
+                        if(player.y < canva.height - 50) {
+                            player.y += 50
+                        }
+                    },
+                    ArrowLeft(player) {
+                        if(player.x > 0) {
+                            player.x -= 50;
+                        }
+                    }
+                }
+
                 const player = state.players[command.playerId];
                 const keyPressed = command.keyPressed;
-
-                if(keyPressed == 'ArrowUp' && player.y > 0) {
-                    player.y -= 10;
-                    return;
-                }
-
-                if(keyPressed == 'ArrowDown' && player.y < canva.height - 50) {
-                    player.y += 10;
-                    return;
-                }
-
-                if(keyPressed == 'ArrowLeft' && player.x > 0) {
-                    player.x -= 10;
-                    return;
-                }
-
-                if(keyPressed == 'ArrowRight' && player.x < canva.width - 50) {
-                    player.x += 10;
-                    return;
+                const moveFunction = acceptedMoves[keyPressed];
+                if(player && moveFunction){
+                    moveFunction(player);
                 }
             }
 
             return {
                 movePlayer,
+                addPlayer,
+                removePlayer,
+                addFruit,
+                removeFruit,
                 state
             }
         }
